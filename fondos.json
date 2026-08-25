@@ -1,0 +1,795 @@
+{
+  "ameris-aatech-fcp": {
+    "nombre": "Ameris AA Tech Financiamiento Corto Plazo FI",
+    "nombre_corto": "Ameris FCP",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "9919",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIAMSLPA",
+        "series_cmf": [
+          "SLPA",
+          "A"
+        ]
+      },
+      "I": {
+        "nemo": "CFIAMSLPI",
+        "series_cmf": [
+          "SLPI",
+          "I"
+        ]
+      },
+      "X": {
+        "nemo": "CFIAMSLPX",
+        "series_cmf": [
+          "SLPX",
+          "X"
+        ]
+      },
+      "AATECH": {
+        "nemo": "CFIAATHFCP",
+        "series_cmf": [
+          "AATECH"
+        ]
+      },
+      "Y": {
+        "nemo": "CFIAATHFCY",
+        "series_cmf": [
+          "Y"
+        ]
+      }
+    },
+    "inicio": "2019-01-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Público en general",
+      "Presencia bursátil": "Serie A: Sí (~54% transacc.); resto No",
+      "Dividendos": "Anual (AATech: trim. provisorio)",
+      "Sobrecolateral factoring": "Sí: 1,08x facturas · 1,15x créditos pyme",
+      "Primera pérdida": "Sí: serie AATech subordinada (≥2,5% activos)",
+      "Retorno preferente": "TIP+2,4% (A) / +3,0% (I) / +3,36% (X) / +3,2% (Y)",
+      "Factorings": "20 (cartera directa de facturas)",
+      "% Facturas": "87,2%",
+      "% Créditos": "12,8% (pyme, pagarés, riego)",
+      "Remuneración fija (IVA incl.)": "A 1,547% / I 0,65% / Y 0,29%",
+      "Remuneración variable": "Solo AATech: 18% sobre hurdle 15%"
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "toesca-dp-facturas": {
+    "nombre": "Toesca Deuda Privada Facturas FI",
+    "nombre_corto": "Toesca Facturas",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "I3",
+    "cmf": {
+      "rut": "9970",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "I": {
+        "nemo": "CFITDPFI-E",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "I2": {
+        "nemo": "CFITDFI2-E",
+        "series_cmf": [
+          "I2"
+        ]
+      },
+      "I3": {
+        "nemo": "CFITDFI3-E",
+        "series_cmf": [
+          "I3"
+        ]
+      }
+    },
+    "inicio": "2021-01-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Presencia bursátil": "Serie I: Sí (~33%); I2/I3 No",
+      "Dividendos": "Trimestral (D/S/T); I/I2/I3 acumulan",
+      "Sobrecolateral factoring": false,
+      "Primera pérdida": "No: pérdidas a prorrata",
+      "Retorno preferente": "TAB 30d+1,5% (sobre serie S subord.)",
+      "Factorings": null,
+      "% Facturas": "72,8%",
+      "% Créditos": "26,0% (pagarés)",
+      "Remuneración fija (IVA incl.)": "I 1,547% / I2 1,19% / I3 0,833%",
+      "Remuneración variable": "No (carry 20% vía serie S)"
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "btg-liquidez-alternativa": {
+    "nombre": "BTG Pactual Liquidez Alternativa FI",
+    "nombre_corto": "BTG Liq. Alternativa",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "10145",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIBTGPLAA",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "I": {
+        "nemo": "CFIBTGPLAI",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "BTGP": {
+        "nemo": "CFIBTGPLAP",
+        "series_cmf": [
+          "BTGP"
+        ]
+      },
+      "T": {
+        "nemo": "CFIBTGPLAT",
+        "series_cmf": [
+          "T"
+        ]
+      }
+    },
+    "inicio": "2021-10-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Público en general",
+      "Presencia bursátil": "Serie A: Sí (~99%); resto No",
+      "Dividendos": "Anual",
+      "Sobrecolateral factoring": "No (recompra 100% por factorings)",
+      "Primera pérdida": false,
+      "Retorno preferente": false,
+      "Factorings": "36",
+      "% Facturas": "71,1%",
+      "% Créditos": "28,9% (créditos a factorings)",
+      "Remuneración fija (IVA incl.)": "A 1,071% / I 0,833% / T 1,428%",
+      "Remuneración variable": "A/T 23,8%, I 17,85% s/TIP+2%"
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "ft-cordada-rendimiento": {
+    "nombre": "FT-Cordada Rendimiento con Liquidez FI",
+    "nombre_corto": "FT-Cordada",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "P",
+    "cmf": {
+      "rut": "9917",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "P": {
+        "nemos": [
+          "CFIFTRLP-E"
+        ],
+        "series_cmf": [
+          "P"
+        ]
+      },
+      "PI": {
+        "nemos": [
+          "CFIFTRPI-E"
+        ],
+        "series_cmf": [
+          "PI"
+        ]
+      }
+    },
+    "inicio": "2020-09-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Presencia bursátil": "Sí: market maker Credicorp (vence 03-08-26)",
+      "Dividendos": "Anual",
+      "Sobrecolateral factoring": "No (retroventa factorings + codeudores)",
+      "Primera pérdida": "Sí: series R/RI ≥10% del FIP (14% dic-25)",
+      "Retorno preferente": "TIP+2,30% (P) / +2,85% (PI) · CPAAA",
+      "Factorings": null,
+      "% Facturas": "97,8% (FIP, sep-25)",
+      "% Créditos": "2,2% (pagarés)",
+      "Remuneración fija (IVA incl.)": "P 1,19% / PI 0,6545%",
+      "Remuneración variable": false
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "lv-facturas": {
+    "nombre": "LarrainVial Facturas FI",
+    "nombre_corto": "LV Facturas",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "L",
+    "cmf": {
+      "rut": "9306",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "L": {
+        "nemo": "CFILVFA-L",
+        "series_cmf": [
+          "L"
+        ]
+      }
+    },
+    "inicio": "2016-04-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Público en general",
+      "Presencia bursátil": "Serie L: Sí (~57%)",
+      "Dividendos": "Anual (paga en mayo)",
+      "Sobrecolateral factoring": null,
+      "Primera pérdida": false,
+      "Retorno preferente": false,
+      "Factorings": "Indirecto: 60% vía otros fondos",
+      "% Facturas": null,
+      "% Créditos": null,
+      "Remuneración fija (IVA incl.)": "L 1,3% / LV 0%",
+      "Remuneración variable": false
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "moneda-cumplo-pp": {
+    "nombre": "Moneda Patria Renta Corto Plazo FI (ex Moneda Cumplo Pronto Pago Pymes)",
+    "nombre_corto": "Moneda Patria RCP",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "R",
+    "cmf": {
+      "rut": "9925",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "C": {
+        "nemo": "CFIMCUMC",
+        "series_cmf": [
+          "C"
+        ]
+      },
+      "E": {
+        "nemo": "CFIMCUME",
+        "series_cmf": [
+          "E"
+        ]
+      },
+      "I": {
+        "nemo": "CFIMCUMI",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "R": {
+        "nemo": "CFIMCUMR",
+        "series_cmf": [
+          "R"
+        ]
+      }
+    },
+    "inicio": "2025-08-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Público en general",
+      "Presencia bursátil": "No (todas las series <25%)",
+      "Dividendos": "Anual (30% BNP; antes 100%)",
+      "Sobrecolateral factoring": false,
+      "Primera pérdida": false,
+      "Retorno preferente": false,
+      "Factorings": null,
+      "% Facturas": "100% de la cartera invertida",
+      "% Créditos": "0%",
+      "Remuneración fija (IVA incl.)": "I 0,952% / C-E 1,19% / R 1,785%",
+      "Remuneración variable": "E/R: 14,28% s/TAB90+2,5%"
+    },
+    "ficha_verificada": "2026-07-23"
+  },
+  "sura-deuda-privada-chile": {
+    "nombre": "SURA Deuda Privada Chile FI",
+    "nombre_corto": "SURA Deuda Priv. Chile",
+    "categoria": "Fondos facturas",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "9977",
+      "tipoentidad": "FIRES"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFISUDPCAA",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "AGF": {
+        "nemo": "CFISUDPCHA",
+        "series_cmf": [
+          "AGF"
+        ]
+      },
+      "SURA": {
+        "nemo": "CFISUDPCHS",
+        "series_cmf": [
+          "SURA"
+        ]
+      }
+    },
+    "inicio": "2019-01-01",
+    "ficha": {
+      "Tipo": "Rescatable",
+      "Tipo inversionista": "Público general",
+      "Presencia bursátil": "Serie A",
+      "Sobrecolateral factoring": "Colaterales a medida (garantías reales, seguros, carteras crediticias)",
+      "Primera pérdida": false,
+      "Retorno preferente": "No (benchmark TIP 30-89d + 1%)",
+      "Factorings": "Directo: 4.919 facturas · 1.415 deudores",
+      "% Facturas": "84,8%",
+      "% Créditos": "10,6% deuda privada + 4,6% money market",
+      "Remuneración fija (IVA incl.)": "A hasta 1,15%",
+      "Remuneración variable": "A hasta 23,8% s/ exceso del benchmark"
+    },
+    "ficha_verificada": "2026-08-25"
+  },
+  "ameris-deuda-directa": {
+    "nombre": "Ameris Deuda Directa FI",
+    "nombre_corto": "Ameris Deuda Directa",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "9495",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIAMDDA-E",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "C": {
+        "nemo": "CFIAMDDC-E",
+        "series_cmf": [
+          "C"
+        ]
+      },
+      "I": {
+        "nemo": "CFIAMDDI-E",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "X": {
+        "nemo": "CFIAMDDX-E",
+        "series_cmf": [
+          "X"
+        ]
+      }
+    },
+    "inicio": "2017-08-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Dividendos": "Anual (30% BNP) + provisorios",
+      "Estrategia": "Deuda directa/privada (vía CFI/FIP)",
+      "Garantías": "2ª/3ª fuente de pago (100% cartera)",
+      "Primera pérdida": "No (serie R subordinada solo en retorno)",
+      "Retorno preferente": "No",
+      "Moneda cartera": "UF 38% / CLP 36% / USD hedge 26%",
+      "Remuneración fija (IVA incl.)": "A 1,19% / C 1,547% / I 0,595% / X 0%",
+      "Remuneración variable": "A/I/X: 23,8% s/TIP+2% (HWM); C/R no"
+    },
+    "ficha_verificada": "2026-07-29"
+  },
+  "toesca-deuda-privada": {
+    "nombre": "Toesca Deuda Privada FI",
+    "nombre_corto": "Toesca Deuda Privada",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "9619",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFITODPA-E",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "F": {
+        "nemo": "CFITODPF-E",
+        "series_cmf": [
+          "F"
+        ]
+      },
+      "I": {
+        "nemo": "CFITODPI-E",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "X": {
+        "nemo": "CFITODPX-E",
+        "series_cmf": [
+          "X"
+        ]
+      },
+      "X1": {
+        "nemo": "CFITDPX1-E",
+        "series_cmf": [
+          "X1"
+        ]
+      }
+    },
+    "inicio": "2018-07-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Dividendos": "A/I mensual; X/X1 acumulan; S/SI subord.",
+      "Estrategia": "Deuda privada (crédito/cobranza vía fondos)",
+      "Composición cartera": "Inmob. 30% · Financiero 28% · SGR 11%",
+      "Moneda cartera": "CLP 51% / UF 49%",
+      "Primera pérdida": "Sí: series S/SI subord. a A/I en capital",
+      "Retorno preferente": "A: TP−0,5% (piso 4,8%) / I: TP (piso 5,33%)",
+      "Remuneración fija (IVA incl.)": "A 1,19% / I 0,69% / F 0,95% / X 1,31% / X1 1,25%",
+      "Remuneración variable": "Sí (F/X/X1/S/SI); A e I no"
+    },
+    "ficha_verificada": "2026-07-29",
+    "anomalias": [
+      "2020-03-30"
+    ]
+  },
+  "lv-deuda-privada": {
+    "nombre": "LarrainVial Deuda Privada FI",
+    "nombre_corto": "LV Deuda Privada",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "UNICA",
+    "cmf": {
+      "rut": "9469",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "UNICA": {
+        "nemo": "CFILVDPU-E",
+        "series_cmf": [
+          "UNICA"
+        ]
+      }
+    },
+    "inicio": "2017-09-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Dividendos": "Anual (100% BNP) + provisorios",
+      "Estrategia": "Deuda privada + inmob. + leasing habitacional",
+      "Moneda cartera": "CLP (UF/USD con cobertura)",
+      "Primera pérdida": "No (serie única)",
+      "Retorno preferente": "No",
+      "Remuneración fija (IVA incl.)": "1,5%",
+      "Remuneración variable": "No",
+      "Riesgo declarado": "Muy Alto"
+    },
+    "ficha_verificada": "2026-07-29",
+    "anomalias": [
+      "2021-12-29"
+    ]
+  },
+  "ft-deuda-privada-mixta": {
+    "nombre": "Frontal Trust Deuda Privada Mixta FI",
+    "nombre_corto": "FT Deuda Priv. Mixta",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "9711",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIFTDMA-E",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "I": {
+        "nemo": "CFIFTDMI-E",
+        "series_cmf": [
+          "I"
+        ]
+      }
+    },
+    "inicio": "2021-11-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Dividendos": "Anual (100%) + provisorios trim.",
+      "Estrategia": "Deuda privada mixta (vía FIPs Frontal Trust)",
+      "Composición cartera": "Facturas, pagarés, mutuos hip., automotriz, cap. pref.",
+      "Moneda cartera": "CLP / UF",
+      "Primera pérdida": "No (serie única de riesgo)",
+      "Retorno preferente": "No",
+      "Remuneración fija (IVA incl.)": "A 1,19% / I 0,833%",
+      "Remuneración variable": "Sí: 17,85% s/TIP+2% (HWM)"
+    },
+    "ficha_verificada": "2026-07-29",
+    "anomalias": [
+      "2026-07-06",
+      "2021-12-23"
+    ]
+  },
+  "btg-credito-privado": {
+    "nombre": "BTG Pactual Crédito Privado FI",
+    "nombre_corto": "BTG Crédito Privado",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "10843",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIBTGCRPA",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "B": {
+        "nemo": "CFIBTGCRPB",
+        "series_cmf": [
+          "B"
+        ]
+      },
+      "I": {
+        "nemo": "CFIBTGCRPI",
+        "series_cmf": [
+          "I"
+        ]
+      },
+      "X": {
+        "nemo": "CFIBTGCRPX",
+        "series_cmf": [
+          "X"
+        ]
+      }
+    },
+    "inicio": "2026-03-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Público en general",
+      "Dividendos": "Anual (30% BNP) + provisorios",
+      "Estrategia": "Crédito privado / deuda (≥70% del activo)",
+      "Composición cartera": "Pagarés, facturas, mutuos, bonos, DPF",
+      "Moneda cartera": "CLP",
+      "Primera pérdida": "No",
+      "Retorno preferente": "No",
+      "Remuneración fija (IVA incl.)": "A 1,666% / B 1,19% / I 0,952% / X 0%",
+      "Remuneración variable": "A/B 23,8%, I 17,85% (HWM); X no"
+    },
+    "ficha_verificada": "2026-07-29"
+  },
+  "ft-cordada-mediano-plazo": {
+    "nombre": "FT-Cordada Rendimiento c/Liquidez Mediano Plazo FI",
+    "nombre_corto": "FT-Cordada Med. Plazo",
+    "categoria": "Fondos deuda",
+    "serie_comparativa": "CLPP",
+    "cmf": {
+      "rut": "10491",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "CLPP": {
+        "nemo": "CFIFTCLP-E",
+        "series_cmf": [
+          "CLPP"
+        ]
+      },
+      "CLPPI": {
+        "nemo": "CFIFCLPI-E",
+        "series_cmf": [
+          "CLPPI"
+        ]
+      },
+      "UFP": {
+        "nemo": "CFIFTUFP-E",
+        "series_cmf": [
+          "UFP"
+        ]
+      }
+    },
+    "inicio": "2023-08-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Dividendos": "Anual (30% BNP) + provisorios",
+      "Estrategia": "Deuda privada mediano plazo (vía Cordada FIP)",
+      "Composición cartera": "Facturas, pagarés, créditos (vía Cordada FIP)",
+      "Moneda cartera": "CLP / UF (series UFP)",
+      "Primera pérdida": "Sí: serie R subordinada (≥12,5% del FIP)",
+      "Retorno preferente": "CLPP TIP+3,8% (mín 6%) / UFP UF+2,3%",
+      "Remuneración fija (IVA incl.)": "CLPP/UFP 1,309% / CLPPI/UFPI 0,6545%",
+      "Remuneración variable": "No (retorno subordinado va a serie R)"
+    },
+    "ficha_verificada": "2026-08-04"
+  },
+  "ameris-adi6": {
+    "nombre": "Ameris Deuda Inmobiliaria VI FI",
+    "nombre_corto": "ADI 6",
+    "categoria": "Fondos inmobiliarios",
+    "serie_comparativa": "A",
+    "frecuencia": "mensual",
+    "precio_bolsa": true,
+    "cmf": {
+      "rut": "9472",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIADI6A",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "B": {
+        "nemo": "CFIADI6FIB",
+        "series_cmf": [
+          "B"
+        ]
+      },
+      "D": {
+        "nemo": "CFIADI6FID",
+        "series_cmf": [
+          "D"
+        ]
+      },
+      "I": {
+        "nemo": "CFIADI6I",
+        "series_cmf": [
+          "I"
+        ]
+      }
+    },
+    "inicio": "2024-01-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Estrategia": "Deuda inmobiliaria: financiamiento a desarrolladores (capital preferente, mezzanine, anticipo de flujos)",
+      "Composición cartera": "~15 proyectos inmobiliarios en Chile",
+      "Dividendos": "Trimestral",
+      "Valorización": "Mensual a tasación (semi-líquido; serie D transa en Bolsa)",
+      "Moneda cartera": "CLP / UF"
+    },
+    "ficha_verificada": "2026-08-06"
+  },
+  "btg-deuda-inmob-ii": {
+    "nombre": "BTG Pactual Deuda Privada Inmobiliaria II FI",
+    "nombre_corto": "BTG Deuda Inmob. II",
+    "categoria": "Fondos inmobiliarios",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "10678",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIBPDPI2A",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "B": {
+        "nemo": "CFIBPDPI2B",
+        "series_cmf": [
+          "B"
+        ]
+      },
+      "C": {
+        "nemo": "CFIBPDPI2C",
+        "series_cmf": [
+          "C"
+        ]
+      },
+      "BTGP": {
+        "nemo": "CFIBPDPI2P",
+        "series_cmf": [
+          "BTGP"
+        ]
+      },
+      "I": {
+        "nemo": "CFIBPDPI2I",
+        "series_cmf": [
+          "I"
+        ]
+      }
+    },
+    "inicio": "2023-01-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Estrategia": "Deuda privada inmobiliaria (financiamiento a desarrolladores)",
+      "Valorización": "Diaria"
+    },
+    "ficha_verificada": "2026-08-06"
+  },
+  "lab-deuda-inmob-i": {
+    "nombre": "LAB Deuda Inmobiliaria I FI",
+    "nombre_corto": "LAB Deuda Inmob. I",
+    "categoria": "Fondos inmobiliarios",
+    "serie_comparativa": "UNICA",
+    "cmf": {
+      "rut": "9273",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "UNICA": {
+        "nemo": "CFIWEGI",
+        "series_cmf": [
+          "UNICA"
+        ]
+      }
+    },
+    "inicio": "2022-01-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Estrategia": "Deuda inmobiliaria (financiamiento a desarrolladores)",
+      "Valorización": "Diaria"
+    },
+    "ficha_verificada": "2026-08-06",
+    "anomalias": [
+      "2022-06-01"
+    ]
+  },
+  "btg-deuda-inmob-i": {
+    "nombre": "BTG Pactual Deuda Privada Inmobiliaria FI",
+    "nombre_corto": "BTG Deuda Inmob. I",
+    "categoria": "Fondos inmobiliarios",
+    "serie_comparativa": "A",
+    "cmf": {
+      "rut": "10487",
+      "tipoentidad": "FINRE"
+    },
+    "series": {
+      "A": {
+        "nemo": "CFIBTGDPIA",
+        "series_cmf": [
+          "A"
+        ]
+      },
+      "B": {
+        "nemo": "CFIBTGDPIB",
+        "series_cmf": [
+          "B"
+        ]
+      },
+      "C": {
+        "nemo": "CFIBTGDPIC",
+        "series_cmf": [
+          "C"
+        ]
+      },
+      "BTGP": {
+        "nemo": "CFIBTGDPIP",
+        "series_cmf": [
+          "BTGP"
+        ]
+      },
+      "I": {
+        "nemo": "CFIBTGDPII",
+        "series_cmf": [
+          "I"
+        ]
+      }
+    },
+    "inicio": "2021-01-01",
+    "ficha": {
+      "Tipo": "No rescatable",
+      "Tipo inversionista": "Inversionistas calificados",
+      "Estrategia": "Deuda privada inmobiliaria (financiamiento a desarrolladores)",
+      "Valorización": "Diaria",
+      "Estado": "En liquidación (AUM −73% en 12m)"
+    },
+    "ficha_verificada": "2026-08-12"
+  }
+}

@@ -1,0 +1,61 @@
+name: Actualizar dashboard
+
+# Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
+on:
+  schedule:
+    - cron: "0 14 * * *"        # ~10:00 Chile (14:00 UTC). CMF/Bolsa publican con rezago.
+  workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
+  push:
+    branches: [main]
+    paths: [".github/workflows/actualizar.yml"]   # correr al cambiar el propio workflow (test)
+
+permissions:
+  contents: write                # para que el bot pueda commitear index.html
+
+concurrency:
+  group: actualizar
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      # base de datos SQLite entre corridas (NO va al repo; solo caché privada).
+      # Si la caché no existe, actualizar.py carga toda la historia (self-healing).
+      - name: Restaurar base de datos
+        uses: actions/cache@v4
+        with:
+          path: datos.db
+          key: datos-db-${{ github.run_id }}
+          restore-keys: |
+            datos-db-
+
+      - name: Actualizar datos y generar reporte
+        run: python actualizar.py --sin-abrir
+
+      - name: Copiar reporte a index.html
+        run: |
+          cp reportes/reporte.html index.html
+          touch .nojekyll
+
+      - name: Publicar (commit + push)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .nojekyll
+          if git diff --staged --quiet; then
+            echo "Sin cambios en el dashboard."
+          else
+            git commit -m "Actualiza dashboard (automatico)"
+            git push
+          fi

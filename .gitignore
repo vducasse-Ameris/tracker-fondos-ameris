@@ -1,0 +1,10 @@
+# base de datos: vive en caché de Actions / local, nunca en el repo
+datos.db
+# config del publish local (ruta del clon Windows)
+publicar.config
+# logs y salidas locales
+*.log
+reportes/
+# python
+__pycache__/
+*.pyc
