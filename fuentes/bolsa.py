@@ -20,10 +20,15 @@ class ClienteBolsa:
 
     def _nueva_sesion(self) -> None:
         """Abre una sesión nueva y renueva el token CSRF. Se re-llama cuando el
-        anti-bot corta la sesión a mitad de una corrida larga."""
+        anti-bot corta la sesión a mitad de una corrida. Si el anti-bot bloquea
+        incluso el token, NO lanza: queda sin token y los _post fallarán suave
+        (quien llama conserva lo cacheado); así el pipeline nunca se cae aquí."""
         self._sesion = creq.Session(impersonate="chrome")
-        token = self._sesion.get(_BASE + "/api/Securities/csrfToken",
-                                 timeout=30).json()["csrf"]
+        try:
+            token = self._sesion.get(_BASE + "/api/Securities/csrfToken",
+                                     timeout=30).json()["csrf"]
+        except Exception:
+            token = ""
         self._headers = {
             "X-CSRF-Token": token,
             "Content-Type": "application/json",
@@ -33,20 +38,22 @@ class ClienteBolsa:
         }
 
     def _post(self, ruta: str, payload: dict) -> dict | list:
-        """POST con reintentos. Tras muchas peticiones seguidas el anti-bot puede
-        responder vacío/HTML (JSONDecodeError) o cortar la sesión; se reintenta
-        con backoff renovando la sesión y el token CSRF."""
+        """POST con UN reintento rápido. Si el anti-bot de la Bolsa bloquea la IP
+        (respuesta vacía/HTML → JSONDecodeError), no conviene insistir: se falla
+        rápido (1 reintento con sesión nueva) y quien llama conserva lo cacheado.
+        El dato CORE del dashboard viene de CMF (que no bloquea); la Bolsa solo
+        aporta dividendos/volumen, que cambian rara vez."""
         ultimo = None
-        for intento in range(4):
+        for intento in range(2):
             try:
                 r = self._sesion.post(_BASE + ruta, headers=self._headers,
-                                      json=payload, timeout=60)
+                                      json=payload, timeout=30)
                 r.raise_for_status()
                 return r.json()
             except Exception as e:  # HTTP, timeout o respuesta no-JSON
                 ultimo = e
-                if intento < 3:
-                    time.sleep(2 * (intento + 1))  # 2s, 4s, 6s
+                if intento == 0:
+                    time.sleep(1)
                     try:
                         self._nueva_sesion()
                     except Exception:
