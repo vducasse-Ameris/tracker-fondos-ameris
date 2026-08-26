@@ -4,7 +4,11 @@ name: Actualizar dashboard
 # Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
 on:
   schedule:
-    - cron: "0 14 * * *"        # ~10:00 Chile (14:00 UTC). CMF/Bolsa publican con rezago.
+    # dos veces al día: CMF publica el valor cuota del día anterior avanzada la
+    # mañana en Chile, así que una corrida temprana lo perdía. La de la tarde
+    # asegura tomar el último dato publicado. (Chile = UTC-4 en invierno.)
+    - cron: "0 13 * * *"        # ~09:00 Chile
+    - cron: "0 22 * * *"        # ~18:00 Chile — CMF ya publicó el dato del día
   workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
   push:
     branches: [main]              # cualquier push humano corre (guardia anti-loop abajo)
