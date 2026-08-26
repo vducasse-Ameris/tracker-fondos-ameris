@@ -7,6 +7,7 @@ CSRF obtenido de /api/Securities/csrfToken.
 from __future__ import annotations
 
 import re
+import time
 
 from curl_cffi import requests as creq
 
@@ -15,6 +16,11 @@ _BASE = "https://www.bolsadesantiago.com"
 
 class ClienteBolsa:
     def __init__(self) -> None:
+        self._nueva_sesion()
+
+    def _nueva_sesion(self) -> None:
+        """Abre una sesión nueva y renueva el token CSRF. Se re-llama cuando el
+        anti-bot corta la sesión a mitad de una corrida larga."""
         self._sesion = creq.Session(impersonate="chrome")
         token = self._sesion.get(_BASE + "/api/Securities/csrfToken",
                                  timeout=30).json()["csrf"]
@@ -27,10 +33,25 @@ class ClienteBolsa:
         }
 
     def _post(self, ruta: str, payload: dict) -> dict | list:
-        r = self._sesion.post(_BASE + ruta, headers=self._headers,
-                              json=payload, timeout=60)
-        r.raise_for_status()
-        return r.json()
+        """POST con reintentos. Tras muchas peticiones seguidas el anti-bot puede
+        responder vacío/HTML (JSONDecodeError) o cortar la sesión; se reintenta
+        con backoff renovando la sesión y el token CSRF."""
+        ultimo = None
+        for intento in range(4):
+            try:
+                r = self._sesion.post(_BASE + ruta, headers=self._headers,
+                                      json=payload, timeout=60)
+                r.raise_for_status()
+                return r.json()
+            except Exception as e:  # HTTP, timeout o respuesta no-JSON
+                ultimo = e
+                if intento < 3:
+                    time.sleep(2 * (intento + 1))  # 2s, 4s, 6s
+                    try:
+                        self._nueva_sesion()
+                    except Exception:
+                        pass
+        raise ultimo
 
     def obtener_dividendos(self, nemo: str) -> list[dict]:
         """Historial de dividendos de un nemo. La API devuelve el historial

@@ -45,7 +45,14 @@ def actualizar(recarga_completa: bool = False) -> None:
         for serie, cfg in ficha["series"].items():
             nemos = cfg.get("nemos") or ([cfg["nemo"]] if cfg.get("nemo") else [])
             for nemo in nemos:
-                divs = cliente_bolsa.obtener_dividendos(nemo)
+                try:
+                    divs = cliente_bolsa.obtener_dividendos(nemo)
+                except Exception as e:
+                    # una falla puntual de la Bolsa (rate-limit/anti-bot) NO debe
+                    # botar toda la corrida: se conservan los dividendos ya guardados
+                    print(f"  Bolsa {nemo} (serie {serie}): ERROR dividendos "
+                          f"({type(e).__name__}) — se conserva lo previo")
+                    divs = []
                 if divs:
                     db.guardar_dividendos(con, fondo_id, serie, divs)
                 # volumen transado 12m (liquidez secundaria)

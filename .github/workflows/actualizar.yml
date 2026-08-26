@@ -1,5 +1,6 @@
 name: Actualizar dashboard
 
+# v2: bolsa.py reintenta con refresco de token; una falla puntual no bota la corrida.
 # Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
 on:
   schedule:
