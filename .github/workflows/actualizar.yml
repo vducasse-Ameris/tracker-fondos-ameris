@@ -4,11 +4,11 @@ name: Actualizar dashboard
 # Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
 on:
   schedule:
-    # dos veces al día: CMF publica el valor cuota del día anterior avanzada la
-    # mañana en Chile, así que una corrida temprana lo perdía. La de la tarde
-    # asegura tomar el último dato publicado. (Chile = UTC-4 en invierno.)
-    - cron: "0 13 * * *"        # ~09:00 Chile
-    - cron: "0 22 * * *"        # ~18:00 Chile — CMF ya publicó el dato del día
+    # dos corridas en la mañana de Chile. GitHub cron es siempre UTC (no ajusta
+    # horario de verano): Chile es UTC-4 en invierno, así que se mapea a 13/15 UTC.
+    # En verano (UTC-3) estas correrán a las 10:00 y 12:00 Chile — reajustar si molesta.
+    - cron: "0 13 * * *"        # 09:00 Chile
+    - cron: "0 15 * * *"        # 11:00 Chile
   workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
   push:
     branches: [main]              # cualquier push humano corre (guardia anti-loop abajo)
