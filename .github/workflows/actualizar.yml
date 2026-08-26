@@ -1,11 +1,11 @@
-name: Actualizar dashboard
+﻿name: Actualizar dashboard
 
-# v2: bolsa.py reintenta con refresco de token; una falla puntual no bota la corrida.
+# v2.1: bolsa.py reintenta con refresco de token; una falla puntual no bota la corrida.
 # Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
 on:
   schedule:
     - cron: "0 14 * * *"        # ~10:00 Chile (14:00 UTC). CMF/Bolsa publican con rezago.
-  workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
+  workflow_dispatch: {}          # botÃ³n "Run workflow" para correr a demanda
   push:
     branches: [main]
     paths: [".github/workflows/actualizar.yml"]   # correr al cambiar el propio workflow (test)
@@ -31,8 +31,8 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
-      # base de datos SQLite entre corridas (NO va al repo; solo caché privada).
-      # Si la caché no existe, actualizar.py carga toda la historia (self-healing).
+      # base de datos SQLite entre corridas (NO va al repo; solo cachÃ© privada).
+      # Si la cachÃ© no existe, actualizar.py carga toda la historia (self-healing).
       - name: Restaurar base de datos
         uses: actions/cache@v4
         with:
