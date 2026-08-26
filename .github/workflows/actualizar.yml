@@ -1,31 +1,35 @@
 name: Actualizar dashboard
 
-# v2: bolsa.py reintenta con refresco de token; una falla puntual no bota la corrida.
-# Corre el pipeline en la nube (independiente del PC del autor) y publica a Pages.
+# v3: publica DIRECTO a GitHub Pages vía Actions (un solo camino, sin el build
+# legacy "Deploy from a branch" que fallaba). Trae datos de CMF + Bolsa, genera
+# el reporte y lo despliega como artefacto de Pages. No commitea nada al repo.
 on:
   schedule:
-    # dos corridas en la mañana de Chile. GitHub cron es siempre UTC (no ajusta
-    # horario de verano): Chile es UTC-4 en invierno, así que se mapea a 13/15 UTC.
-    # En verano (UTC-3) estas correrán a las 10:00 y 12:00 Chile — reajustar si molesta.
+    # GitHub cron es siempre UTC (no ajusta horario de verano). Chile = UTC-4 en
+    # invierno. En verano (UTC-3) correrán a las 10:00 y 12:00 Chile.
     - cron: "0 13 * * *"        # 09:00 Chile
     - cron: "0 15 * * *"        # 11:00 Chile
   workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
   push:
-    branches: [main]              # cualquier push humano corre (guardia anti-loop abajo)
+    branches: [main]             # desplegar al cambiar código/workflow
 
 permissions:
-  contents: write                # para que el bot pueda commitear index.html
+  contents: read
+  pages: write
+  id-token: write
 
+# una sola implementación de Pages a la vez
 concurrency:
-  group: actualizar
+  group: pages
   cancel-in-progress: false
 
 jobs:
   actualizar:
-    # el bot commitea index.html en cada corrida: su push NO debe re-disparar (evita loop)
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,8 +40,8 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r requirements.txt
 
-      # base de datos SQLite entre corridas (NO va al repo; solo caché privada).
-      # Si la caché no existe, actualizar.py carga toda la historia (self-healing).
+      # base de datos SQLite entre corridas (caché privada, NO va al repo).
+      # Si no existe, actualizar.py carga toda la historia (self-healing).
       - name: Restaurar base de datos
         uses: actions/cache@v4
         with:
@@ -49,19 +53,17 @@ jobs:
       - name: Actualizar datos y generar reporte
         run: python actualizar.py --sin-abrir
 
-      - name: Copiar reporte a index.html
+      - name: Preparar sitio (solo index.html)
         run: |
-          cp reportes/reporte.html index.html
-          touch .nojekyll
+          mkdir -p _site
+          cp reportes/reporte.html _site/index.html
+          touch _site/.nojekyll
 
-      - name: Publicar (commit + push)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html .nojekyll
-          if git diff --staged --quiet; then
-            echo "Sin cambios en el dashboard."
-          else
-            git commit -m "Actualiza dashboard (automatico)"
-            git push
-          fi
+      - name: Subir artefacto de Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Desplegar a Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
