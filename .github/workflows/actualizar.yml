@@ -4,11 +4,14 @@ name: Actualizar dashboard
 # legacy "Deploy from a branch" que fallaba). Trae datos de CMF + Bolsa, genera
 # el reporte y lo despliega como artefacto de Pages. No commitea nada al repo.
 on:
+    # Varias corridas repartidas en el día: (a) redundancia — si GitHub bota una
+    # corrida programada (pasa), otra la cubre; (b) CMF publica el valor cuota del
+    # día avanzada la mañana, así la del mediodía/tarde toma el dato fresco.
+    # GitHub cron es siempre UTC (no ajusta horario de verano). Chile = UTC-4 invierno.
   schedule:
-    # GitHub cron es siempre UTC (no ajusta horario de verano). Chile = UTC-4 en
-    # invierno. En verano (UTC-3) correrán a las 10:00 y 12:00 Chile.
     - cron: "0 13 * * *"        # 09:00 Chile
-    - cron: "0 15 * * *"        # 11:00 Chile
+    - cron: "0 17 * * *"        # 13:00 Chile (tras publicación CMF)
+    - cron: "0 21 * * *"        # 17:00 Chile (respaldo)
   workflow_dispatch: {}          # botón "Run workflow" para correr a demanda
   push:
     branches: [main]             # desplegar al cambiar código/workflow
@@ -18,9 +21,10 @@ permissions:
   pages: write
   id-token: write
 
-# una sola implementación de Pages a la vez
+# una sola corrida de ESTE workflow a la vez (nombre propio para no colisionar
+# con el grupo interno "pages" del build legacy de GitHub)
 concurrency:
-  group: pages
+  group: actualizar-dashboard
   cancel-in-progress: false
 
 jobs:
