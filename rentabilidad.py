@@ -46,7 +46,8 @@ def _dia_descuento(vc: pd.Series, fecha_limite, fecha_pago,
 
 def serie_ajustada(con: sqlite3.Connection, fondo_id: str, nemos: str | list[str],
                    series_cmf: list[str],
-                   anomalias: list[str] | None = None) -> pd.DataFrame:
+                   anomalias: list[str] | None = None,
+                   valor_cuota_inicial: float | None = None) -> pd.DataFrame:
     """DataFrame indexado por fecha con valor_cuota, dividendo del día e
     índice de rentabilidad ajustado (base 1 al inicio de la serie).
 
@@ -58,6 +59,15 @@ def serie_ajustada(con: sqlite3.Connection, fondo_id: str, nemos: str | list[str
     verificados (rescates/aportes que re-golpean el valor cuota, no rendimiento
     orgánico); el retorno de esos días se reemplaza por el devengo típico de los
     días vecinos para que no contamine el índice acumulado.
+
+    `valor_cuota_inicial` es el valor cuota de origen del fondo (típicamente
+    $10.000 al inicio de la colocación). CMF suele publicar el primer valor
+    cuota unos días después del inicio, ya con algo de devengo encima: sin este
+    dato el índice arranca en el primer cierre CMF y la rentabilidad «desde
+    inicio» queda subestimada por esos días (BTG Crédito Privado serie A: el
+    factsheet marca 3,63% desde origen y el índice sin anclar daba 3,60%).
+    Declararlo ancla el índice en el par, de modo que «desde inicio» y el
+    acumulado anual calcen 1:1 contra el factsheet.
 
     El índice se construye SOLO con valor cuota oficial (CMF): es NAV, no precio
     de mercado. El último precio transado en Bolsa se muestra aparte (ver
@@ -95,11 +105,19 @@ def serie_ajustada(con: sqlite3.Connection, fondo_id: str, nemos: str | list[str
 
     retorno_diario = (vc["valor_cuota"] + vc["dividendo"]) / vc["valor_cuota"].shift(1) - 1
 
+    # anclar el índice en el valor cuota de origen: el primer día deja de ser
+    # NaN y pasa a acumular el devengo previo al primer cierre publicado por CMF
+    if valor_cuota_inicial:
+        retorno_diario.iloc[0] = ((vc["valor_cuota"].iloc[0] + vc["dividendo"].iloc[0])
+                                  / valor_cuota_inicial - 1)
+
     # neutralizar días con evento de capital verificado: el salto del VC es un
     # artefacto (no rendimiento), se reemplaza por la mediana de los ±5 vecinos
     for f_str in (anomalias or []):
         f = pd.Timestamp(f_str)
-        if f in retorno_diario.index:
+        # el primer día sin ancla no tiene retorno que neutralizar (queda NaN);
+        # tocarlo movería la base 1 del índice
+        if f in retorno_diario.index and pd.notna(retorno_diario.loc[f]):
             loc = retorno_diario.index.get_loc(f)
             vecinos = retorno_diario.iloc[max(0, loc - 5):loc + 6].drop(f)
             if vecinos.notna().any():
@@ -111,9 +129,14 @@ def serie_ajustada(con: sqlite3.Connection, fondo_id: str, nemos: str | list[str
 
 
 def _rent(indice: pd.Series, desde: dt.date | None) -> float | None:
-    """Rentabilidad acumulada desde la última fecha <= `desde` hasta el final."""
+    """Rentabilidad acumulada desde la última fecha <= `desde` hasta el final.
+
+    Con `desde=None` mide desde el origen del índice, que es la base 1: el
+    primer cierre CMF en el caso normal, o el valor cuota de origen del fondo
+    si la serie viene anclada (ver `serie_ajustada`).
+    """
     if desde is None:
-        base = indice.iloc[0]
+        base = 1.0
     else:
         previos = indice[indice.index <= pd.Timestamp(desde)]
         if previos.empty:
@@ -137,10 +160,54 @@ def _fin_de_mes(anio: int, mes: int) -> dt.date:
     return dt.date(anio, mes + 1, 1) - dt.timedelta(days=1)
 
 
-def resumen_cierre_mensual(df: pd.DataFrame) -> dict:
+def base30(rent_mes: float | None, corte: dt.date) -> float | None:
+    """Rentabilidad del mes normalizada a 30 días — la convención «Base 30».
+
+    Los factsheets de BTG Asset Management publican la línea «MES (Base 30)»:
+    la rentabilidad del mes calendario escalada por 30/días del mes. En meses de
+    31 días la cifra publicada queda ~3 pb bajo el mes calendario real
+    (jul-2026, BTG Crédito Privado serie A: 0,8109% × 30/31 = 0,78%, que es
+    justamente lo que muestra el factsheet), y en febrero queda por encima.
+
+    NO es la rentabilidad efectiva del mes: es una normalización para comparar
+    meses de distinto largo. El tracker sigue reportando el mes calendario en
+    la matriz comparativa (única convención comparable entre gestoras) y muestra
+    esta cifra solo en la tabla de certificación de los fondos cuyo gestor
+    publica así.
+    """
+    if rent_mes is None:
+        return None
+    return rent_mes * 30 / _dias_del_mes(corte)
+
+
+def _dias_del_mes(f: dt.date) -> int:
+    return (_fin_de_mes(f.year, f.month) - dt.date(f.year, f.month, 1)).days + 1
+
+
+def _rent_ytd(indice: pd.Series, corte: dt.date, nacio_en_el_anio: bool) -> float | None:
+    """Acumulado del año al `corte`.
+
+    Si el fondo nació dentro del mismo año no existe cierre al 31-dic anterior
+    contra el cual medir: el acumulado anual es entonces el acumulado desde el
+    origen, que es lo que los factsheets informan como «acumulado anual» (BTG
+    Crédito Privado a jul-2026: acumulado anual = desde origen = 3,63%). Antes
+    esta celda salía «–».
+    """
+    directo = _rent_entre(indice, dt.date(corte.year - 1, 12, 31), corte)
+    if directo is not None or not nacio_en_el_anio:
+        return directo
+    hasta = indice[indice.index <= pd.Timestamp(corte)]
+    return hasta.iloc[-1] - 1 if not hasta.empty else None
+
+
+def resumen_cierre_mensual(df: pd.DataFrame, anio_inicio: int | None = None) -> dict:
     """Rentabilidades al último cierre de mes, con ventanas de meses
     calendario — la convención de los factsheets mensuales. Sirve para
     certificar que el índice del tracker replica las cifras publicadas.
+
+    `mes_base30` acompaña a `mes` con la misma cifra normalizada a 30 días
+    (ver `base30`); el reporte la muestra solo en los fondos cuyo gestor
+    publica el mes con esa convención.
     """
     if df.empty or len(df) < 2:
         return {}
@@ -153,18 +220,22 @@ def resumen_cierre_mensual(df: pd.DataFrame) -> dict:
         anio, mes0 = divmod(corte.year * 12 + corte.month - 1 - n, 12)
         return _fin_de_mes(anio, mes0 + 1)
 
+    mes = _rent_entre(indice, base_meses(1), corte)
+    nacio_en_el_anio = (anio_inicio or indice.index[0].year) >= corte.year
     return {
         "corte": corte.isoformat(),
-        "mes": _rent_entre(indice, base_meses(1), corte),
+        "mes": mes,
+        "mes_base30": base30(mes, corte),
         "3m": _rent_entre(indice, base_meses(3), corte),
-        "ytd": _rent_entre(indice, dt.date(corte.year - 1, 12, 31), corte),
+        "ytd": _rent_ytd(indice, corte, nacio_en_el_anio),
         "12m": _rent_entre(indice, base_meses(12), corte),
         "24m": _rent_entre(indice, base_meses(24), corte),
         "36m": _rent_entre(indice, base_meses(36), corte),
     }
 
 
-def resumen_rentabilidades(df: pd.DataFrame) -> dict:
+def resumen_rentabilidades(df: pd.DataFrame, anio_inicio: int | None = None,
+                           fecha_origen: str | None = None) -> dict:
     """Rentabilidades estándar (nominal CLP).
 
     Las ventanas 1M/3M/YTD/12M usan **cortes de mes calendario** al último mes
@@ -196,13 +267,14 @@ def resumen_rentabilidades(df: pd.DataFrame) -> dict:
         "mes_anterior": _rent_entre(indice, fin_mes_ante, fin_mes_prev),
         "mes_anterior_fecha": fin_mes_prev.isoformat(),
         "3m": _rent_entre(indice, base_meses(3), corte),
-        "ytd": _rent_entre(indice, dt.date(corte.year - 1, 12, 31), corte),
+        "ytd": _rent_ytd(indice, corte,
+                         (anio_inicio or indice.index[0].year) >= corte.year),
         "12m": _rent_entre(indice, base_meses(12), corte),
         "inicio": _rent(indice, None),
-        "fecha_inicio": indice.index[0].date().isoformat(),
+        "fecha_inicio": fecha_origen or indice.index[0].date().isoformat(),
     }
     # anualizada desde inicio si la serie tiene más de un año
-    dias = (indice.index[-1] - indice.index[0]).days
+    dias = (indice.index[-1] - pd.Timestamp(resultados["fecha_inicio"])).days
     if dias > 365 and resultados["inicio"] is not None:
         resultados["inicio_anual"] = (1 + resultados["inicio"]) ** (365 / dias) - 1
     return resultados

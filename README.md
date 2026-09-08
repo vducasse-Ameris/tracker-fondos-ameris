@@ -194,6 +194,31 @@ la publicación se omite sin afectar el resto de la corrida.
   de mes» (Mes/3M/YTD/12M/24M/36M, meses calendario al último cierre mensual)
   para cotejar 1:1 contra los factsheets. Ojo: el resto del reporte usa
   ventanas rolling al último dato — no confundir cortes al auditar.
+- **«Base 30» (convención de BTG):** los factsheets de BTG Asset Management
+  publican la línea **«MES (Base 30)»**, que es el mes calendario escalado por
+  `30 / días del mes`. En meses de 31 días la cifra publicada queda ~3% *bajo*
+  el mes real y en febrero queda por encima. No es la rentabilidad efectiva del
+  mes: es una normalización para comparar meses de distinto largo.
+  Se declara por fondo en `fondos.json` → `"convencion_mes": "base30"`, y el
+  reporte agrega la columna **Mes (Base 30)** en la tabla «Corte fin de mes» de
+  esos fondos. La **matriz comparativa siempre va en mes calendario** — es la
+  única convención comparable entre gestoras; mezclarlas castigaría a los
+  fondos BTG en los meses de 31 días. Verificado a jul-2026: BTG Crédito
+  Privado serie A, mes calendario 0,8109% → Base 30 0,78% = factsheet; BTG
+  Liquidez Alternativa serie A, 0,5749% → 0,56% = factsheet.
+- **Valor cuota de origen (`origen`):** CMF publica el primer valor cuota de una
+  serie varios días después del inicio de la colocación, ya con devengo encima.
+  Sin corregirlo, el índice arranca en ese primer cierre y la rentabilidad
+  «desde inicio» sale subestimada. Declarando en `fondos.json`
+  `"origen": {"fecha": "AAAA-MM-DD", "valor_cuota": 10000}` el índice se ancla
+  en el par de colocación. En BTG Crédito Privado serie A esto llevó «desde
+  origen» de 3,60% a **3,63%**, la cifra del factsheet. Solo se declara cuando
+  el par está verificado contra el factsheet o el reglamento.
+- **Acumulado anual de fondos nacidos en el año:** si el fondo no tiene cierre
+  al 31-dic anterior, el YTD antes salía «–». Ahora, cuando el año de `origen`
+  (o de `inicio`) es el año en curso, el acumulado anual se mide desde el origen
+  — que es lo que los factsheets informan como «acumulado anual» (BTG Crédito
+  Privado a jul-2026: 3,63%, igual que desde origen).
 - Todo en CLP nominal.
 - **Verificación (jul-2026):** los retornos mensuales, YTD y año 2024 de Ameris
   FCP series A e I replican los factsheets oficiales (sep-2025 a feb-2026)

@@ -293,6 +293,21 @@ def _fin_mes_valor(s: pd.Series, anio: int, mes: int):
     return sub.iloc[-1] if len(sub) else None
 
 
+def _origen(ficha: dict) -> dict:
+    """Datos de origen del fondo declarados en `fondos.json`.
+
+    `origen.valor_cuota` ancla el índice en el par de colocación (CMF publica
+    el primer valor cuota días después del inicio, ya con devengo encima);
+    `anio_inicio` permite reportar el acumulado anual de un fondo nacido dentro
+    del año en curso, para el que no existe cierre al 31-dic anterior.
+    """
+    origen = ficha.get("origen") or {}
+    inicio = origen.get("fecha") or ficha.get("inicio")
+    return {"valor_cuota_inicial": origen.get("valor_cuota"),
+            "fecha_origen": origen.get("fecha"),
+            "anio_inicio": int(inicio[:4]) if inicio else None}
+
+
 def _precio_fresco(con: sqlite3.Connection, nemos: list[str], fecha_cmf: str):
     """Último precio transado en Bolsa posterior al último cierre CMF, o None.
 
@@ -375,6 +390,8 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     aums: dict[str, pd.Series] = {}
     etiquetas_serie: dict[str, str] = {}
     mensual: dict[str, bool] = {}  # fondos con valorización mensual (vol √12, nota)
+    origenes: dict[str, dict] = {}
+    base30_fondos: list[str] = []  # gestores que publican el mes en «Base 30»
     for fid, ficha in fondos.items():
         corto = ficha.get("nombre_corto", fid)
         serie = ficha.get("serie_comparativa") or next(iter(ficha["series"]))
@@ -382,10 +399,15 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
         if not cfg:
             continue
         nemos = cfg.get("nemos") or ([cfg["nemo"]] if cfg.get("nemo") else [])
+        origen = _origen(ficha)
         df = rentabilidad.serie_ajustada(con, fid, nemos, cfg["series_cmf"],
-                                         ficha.get("anomalias"))
+                                         ficha.get("anomalias"),
+                                         origen["valor_cuota_inicial"])
         if df.empty:
             continue
+        origenes[corto] = origen
+        if ficha.get("convencion_mes") == "base30":
+            base30_fondos.append(corto)
         dfs[corto] = df
         indices[corto] = df["indice"]
         etiquetas_serie[corto] = serie
@@ -454,7 +476,9 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     # --- tabla cuantitativa (serie comparativa, ventanas rolling + riesgo 12M) ---
     filas_cuant = []
     for corto, df in dfs.items():
-        r = rentabilidad.resumen_rentabilidades(df)
+        o = origenes.get(corto, {})
+        r = rentabilidad.resumen_rentabilidades(df, o.get("anio_inicio"),
+                                                o.get("fecha_origen"))
         if not r:
             continue
         idx = colores[corto] % len(_PALETA)
@@ -553,6 +577,19 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     # notas para categorías con fondos de valorización mensual (deuda inmobiliaria):
     # su vol/MDD salen artificialmente bajos porque el valor cuota es a tasación
     # mensual, no a mercado diario → no comparables con los fondos diarios.
+    # la matriz siempre va en mes calendario: es la única convención comparable
+    # entre gestoras. Se avisa de los que publican distinto para que nadie lea
+    # una diferencia de convención como una diferencia de rentabilidad.
+    nota_base30 = (
+        '<p class="muted mini">Meses calendario. '
+        f'<strong>{", ".join(base30_fondos)}</strong> '
+        f'{"publican" if len(base30_fondos) > 1 else "publica"} el mes en '
+        '<strong>«Base 30»</strong> (mes calendario × 30 / días del mes), así que '
+        'su factsheet muestra una cifra menor en meses de 31 días y mayor en '
+        'febrero: un 0,81% calendario de julio se publica como 0,78%. La cifra '
+        'Base 30 de cada serie está en la tabla «Corte fin de mes» de esos fondos.</p>'
+        if base30_fondos else "")
+
     nota_riesgo = ('<p class="muted mini"><strong>*</strong> Valorización mensual a '
                    'tasación (no mark-to-market): la Vol y el Max Drawdown salen '
                    'artificialmente bajos y <strong>no son comparables</strong> con los '
@@ -595,6 +632,7 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     <thead><tr><th>Fondo · Serie</th>{enc_meses}</tr></thead>
     <tbody>{''.join(filas_matriz)}</tbody>
   </table></div>
+  {nota_base30}
 
   <h3>Evolución índice ajustado <span class="muted mini">(base 100 al inicio de la ventana)</span></h3>
   <div class="presets">{botones}</div>
@@ -647,15 +685,18 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
     colores = {serie: i for i, serie in enumerate(ficha["series"])}
     datos_series: dict[str, pd.DataFrame] = {}
     resumenes: dict[str, dict] = {}
+    origen = _origen(ficha)
 
     for serie, cfg in ficha["series"].items():
         nemos = cfg.get("nemos") or ([cfg["nemo"]] if cfg.get("nemo") else [])
         df = rentabilidad.serie_ajustada(con, fondo_id, nemos, cfg["series_cmf"],
-                                         ficha.get("anomalias"))
+                                         ficha.get("anomalias"),
+                                         origen["valor_cuota_inicial"])
         if df.empty:
             continue
         datos_series[serie] = df
-        r = rentabilidad.resumen_rentabilidades(df)
+        r = rentabilidad.resumen_rentabilidades(df, origen["anio_inicio"],
+                                                origen["fecha_origen"])
         if r:
             resumenes[serie] = r
 
@@ -668,11 +709,14 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
     fin_mes_prev = dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1)
     etiqueta_mes = f"{_MESES[fin_mes_prev.month - 1]}-{fin_mes_prev.year % 100:02d}"
 
-    # tabla de certificación al cierre de mes (convención factsheet)
+    # tabla de certificación al cierre de mes (convención factsheet). Si el
+    # gestor publica el mes en «Base 30» (BTG), se agrega esa columna al lado
+    # del mes calendario para que la tabla calce 1:1 con el factsheet.
+    base30 = ficha.get("convencion_mes") == "base30"
     filas_cierre = []
     corte_fondo = None
     for serie, df in datos_series.items():
-        rc = rentabilidad.resumen_cierre_mensual(df)
+        rc = rentabilidad.resumen_cierre_mensual(df, origen["anio_inicio"])
         if not rc:
             continue
         corte_fondo = corte_fondo or rc["corte"]
@@ -680,7 +724,9 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
         filas_cierre.append(
             "<tr>"
             f'<td><span class="swatch s{idx}"></span>{serie}</td>'
-            + _celda_pct(rc["mes"]) + _celda_pct(rc["3m"]) + _celda_pct(rc["ytd"])
+            + _celda_pct(rc["mes"])
+            + (_celda_pct(rc["mes_base30"]) if base30 else "")
+            + _celda_pct(rc["3m"]) + _celda_pct(rc["ytd"])
             + _celda_pct(rc["12m"]) + _celda_pct(rc["24m"]) + _celda_pct(rc["36m"])
             + "</tr>")
 
@@ -761,6 +807,20 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
                f'no hay dato diario)">{etiqueta_ult_mes}</th>' if es_mensual
                else "<th>Diaria</th>")
 
+    # columna y nota de «Base 30» — solo en fondos cuyo gestor publica así
+    col_base30 = ('<th title="Mes calendario escalado por 30/días del mes — la '
+                  'convención «MES (Base 30)» del factsheet del gestor">Mes '
+                  '(Base 30)</th>' if base30 else "")
+    nota_base30 = ('<p class="muted mini">El gestor publica el mes en '
+                   '<strong>«Base 30»</strong>: la rentabilidad del mes calendario '
+                   'escalada por 30 / días del mes. En meses de 31 días la cifra '
+                   'publicada queda ~3% bajo el mes real (un 0,81% calendario se '
+                   'publica como 0,78%) y en febrero queda por encima. No es la '
+                   'rentabilidad efectiva del mes: es una normalización para '
+                   'comparar meses de distinto largo. La matriz comparativa usa mes '
+                   'calendario, la única convención comparable entre gestoras.</p>'
+                   if base30 else "")
+
     return f"""
 <section>
   <h2>{ficha['nombre']}</h2>
@@ -779,10 +839,11 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
   <h3>Corte fin de mes <span class="muted mini">(ventanas de meses calendario al
      {_fecha_cl(corte_fondo) if corte_fondo else "–"} — para certificar contra el factsheet)</span></h3>
   <div class="tabla-scroll"><table>
-    <thead><tr><th>Serie</th><th>Mes ({etiqueta_mes})</th><th>3M</th><th>YTD</th>
+    <thead><tr><th>Serie</th><th>Mes ({etiqueta_mes})</th>{col_base30}<th>3M</th><th>YTD</th>
     <th>12M</th><th>24M</th><th>36M</th></tr></thead>
-    <tbody>{''.join(filas_cierre) or '<tr><td colspan="7">Sin mes cerrado aún</td></tr>'}</tbody>
+    <tbody>{''.join(filas_cierre) or f'<tr><td colspan="{8 if base30 else 7}">Sin mes cerrado aún</td></tr>'}</tbody>
   </table></div>
+  {nota_base30}
 
   <h3>Evolución índice ajustado <span class="muted mini">(base 100 al inicio de la ventana)</span></h3>
   <div class="presets">{botones}</div>

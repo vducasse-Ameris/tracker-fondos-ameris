@@ -142,6 +142,7 @@
       }
     },
     "inicio": "2021-10-01",
+    "convencion_mes": "base30",
     "ficha": {
       "Tipo": "Rescatable",
       "Tipo inversionista": "Público en general",
@@ -555,6 +556,11 @@
       }
     },
     "inicio": "2026-03-01",
+    "convencion_mes": "base30",
+    "origen": {
+      "fecha": "2026-03-11",
+      "valor_cuota": 10000
+    },
     "ficha": {
       "Tipo": "No rescatable",
       "Tipo inversionista": "Público en general",
