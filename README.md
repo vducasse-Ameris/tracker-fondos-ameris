@@ -3,6 +3,77 @@
 Plataforma local de seguimiento de rentabilidades diarias de fondos de inversión
 Ameris, ajustadas por dividendos.
 
+## ⚠️ TRASPASO — leer primero
+
+Escrito el **09-sep-2026**, al salir de la compañía quien construyó y operaba
+esto (Vicente D.). Resumen para quien lo reciba.
+
+### Qué sigue funcionando solo
+
+El dashboard se genera **en la nube**, con GitHub Actions, tres veces al día
+(09:00, 13:00 y 17:00 hora de Chile). No depende de que nadie encienda un
+computador. Trae los datos de CMF y de la Bolsa, calcula todo y publica en:
+
+**https://vducasse-ameris.github.io/tracker-fondos-ameris/**
+
+Todo el código que corre en la nube vive en el repo
+`vducasse-Ameris/tracker-fondos-ameris`. Este proyecto en OneDrive es una copia
+de trabajo: **editar aquí NO cambia el dashboard publicado** — hay que llevar el
+cambio al repo (ver «Publicar un cambio»).
+
+### 🔴 Lo urgente: tres cosas atadas a una cuenta que se va
+
+Esto **no lo puede arreglar el código**; requiere que alguien con accesos actúe:
+
+1. **La cuenta de GitHub `vducasse-Ameris` es dueña del repo.** Si se desactiva,
+   se caen Actions y Pages, y el dashboard muere. → Transferir el repositorio a
+   una cuenta u organización de la empresa (*Settings → General → Transfer
+   ownership*). Es lo más importante de esta lista.
+2. **Los correos de fallo llegan a esa misma cuenta.** Si el proceso empieza a
+   fallar, nadie se entera. → Tras transferir, agregar destinatarios en *Watch →
+   Custom → Actions* del repo.
+3. **El token de publicación local** (embebido en el clon
+   `C:\Users\VicenteDucasse\dashboard-fondos-pages`) muere con la cuenta. Solo
+   afecta a la publicación desde el PC, que es **redundante** — la nube publica
+   igual. No es urgente.
+
+### Lo que deja de correr, y por qué no importa
+
+La **tarea programada de Windows** («FondosTracker actualizacion diaria») corre
+en el equipo de quien se va. Cuando ese equipo se dé de baja, deja de correr, y
+con ella se congela la copia de OneDrive
+`../link HTML/Dashboard Fondos Ameris.html`.
+
+**El dashboard publicado no se ve afectado.** Pero si el equipo comparte el
+archivo de OneDrive en vez del link, quedaría mirando cifras viejas. Por eso el
+reporte trae un **aviso de datos desactualizados**: se evalúa al *abrir* la
+página (compara la fecha de generación con la del visitante), así que un archivo
+congelado se delata solo — barra ámbar a los 5 días, roja a los 14. Aun así,
+**lo recomendable es compartir el link, no el archivo.**
+
+### Publicar un cambio
+
+```
+# 1) editar y probar aquí (esto NO publica nada)
+python -c "import json,db,reporte; F=json.load(open('fondos.json',encoding='utf-8')); c=db.conectar(); print(reporte.generar(c,F)); c.close()"
+
+# 2) llevar el cambio al repo y publicar
+cp rentabilidad.py reporte.py actualizar.py fondos.json README.md C:\Users\<usuario>\dashboard-fondos-pages\
+cd C:\Users\<usuario>\dashboard-fondos-pages
+git add -A && git commit -m "..." && git push
+```
+
+El push dispara el workflow, que regenera y despliega en ~3 minutos.
+
+⚠️ **No correr `python actualizar.py` para probar cambios**: ese comando publica
+al sitio público al terminar. Para probar, generar solo el reporte (paso 1).
+
+### Verificar que sigue vivo
+
+Abrir el link: si no hay barra de aviso arriba, está al día. En el repo,
+*Actions* muestra el historial de corridas. Un fallo aislado es normal (CMF a
+veces responde mal); dos o tres seguidos ameritan mirar.
+
 ## Uso diario
 
 ```
@@ -85,7 +156,7 @@ cuota por fondo, marcando "ATRASADO" si supera 4 días corridos (posible falla d
 
 Existe una tarea programada de Windows **«FondosTracker actualizacion diaria»**
 (creada 23-jul-2026) que ejecuta `actualizar.py --sin-abrir` todos los días a
-las **09:30** (o apenas se encienda el equipo si estaba apagado) y deja
+las **10:30** (o apenas se encienda el equipo si estaba apagado) y deja
 registro en `actualizacion.log`. Administrarla:
 
 ```

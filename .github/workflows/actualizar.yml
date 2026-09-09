@@ -35,9 +35,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -47,7 +47,7 @@ jobs:
       # base de datos SQLite entre corridas (caché privada, NO va al repo).
       # Si no existe, actualizar.py carga toda la historia (self-healing).
       - name: Restaurar base de datos
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: datos.db
           key: datos-db-${{ github.run_id }}
@@ -64,10 +64,10 @@ jobs:
           touch _site/.nojekyll
 
       - name: Subir artefacto de Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
       - name: Desplegar a Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

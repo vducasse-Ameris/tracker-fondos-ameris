@@ -271,7 +271,8 @@ def generar(con: sqlite3.Connection, fondos: dict) -> Path:
                      .replace("__CUERPO__", "\n".join(cuerpos)) \
                      .replace("__LOGO__", logo_html) \
                      .replace("__FAVICON__", favicon_html) \
-                     .replace("__GENERADO__", dt.datetime.now().strftime("%d-%m-%Y %H:%M"))
+                     .replace("__GENERADO__", dt.datetime.now().strftime("%d-%m-%Y %H:%M")) \
+                     .replace("__GENERADO_ISO__", dt.date.today().isoformat())
     RUTA_REPORTE.parent.mkdir(exist_ok=True)
     RUTA_REPORTE.write_text(html, encoding="utf-8")
     return RUTA_REPORTE
@@ -1022,6 +1023,20 @@ table.matriz td, table.matriz th { padding: 6px 6px; }
 .tooltip .fila { display: flex; align-items: center; gap: 6px; }
 .tooltip .val { margin-left: auto; font-variant-numeric: tabular-nums; padding-left: 12px; }
 footer { color: var(--muted); font-size: 0.8rem; margin: 18px 4px; }
+/* aviso de dashboard congelado: se evalúa al ABRIR la página (no al generarla),
+   comparando la fecha de generación con la del visitante. Así un archivo que
+   dejó de actualizarse — proceso caído, copia guardada a mano — se delata solo
+   en vez de seguir mostrando cifras viejas como si fueran vigentes. */
+.aviso-viejo { margin: 0 0 16px; padding: 12px 16px; border-radius: 8px;
+  border: 1px solid #d9a441; background: #fdf3e0; color: #6b4a12;
+  font-size: 0.9rem; line-height: 1.45; }
+.aviso-viejo.grave { border-color: var(--neg); background: #fdecea; color: #8b2318; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .aviso-viejo { background: #3a2c12; color: #f2ddb4;
+    border-color: #8a6a24; }
+  :root:not([data-theme="light"]) .aviso-viejo.grave { background: #3c1c18;
+    color: #f6c9c2; border-color: #a33f33; }
+}
 </style>
 <main>
 <header class="cabecera">
@@ -1031,11 +1046,31 @@ footer { color: var(--muted); font-size: 0.8rem; margin: 18px 4px; }
     <p class="sub">Rentabilidades diarias ajustadas por dividendos</p>
   </div>
 </header>
+<div id="aviso-viejo" class="aviso-viejo" hidden></div>
 <nav class="nav-vistas">__NAV__</nav>
 __CUERPO__
 <footer>Generado el __GENERADO__ · fondos-tracker (CMF + Bolsa de Santiago/nuam)</footer>
 </main>
 <script>
+/* Dashboard congelado: compara la fecha de generación con la del visitante.
+   El umbral son 5 días — la actualización es diaria y CMF publica con 1-2 días
+   hábiles de rezago, así que un fin de semana largo no debe disparar el aviso. */
+(function () {
+  var generado = "__GENERADO_ISO__";
+  var caja = document.getElementById("aviso-viejo");
+  if (!caja || !generado) { return; }
+  var dias = Math.floor((Date.now() - new Date(generado + "T12:00:00").getTime()) / 86400000);
+  if (isNaN(dias) || dias < 5) { return; }
+  var grave = dias >= 14;
+  caja.className = "aviso-viejo" + (grave ? " grave" : "");
+  caja.innerHTML = "<strong>Datos desactualizados: este dashboard se generó hace "
+    + dias + " días</strong> (__GENERADO__). Las cifras que ves NO son las vigentes"
+    + (grave ? " y el proceso automático de actualización lleva semanas sin correr."
+             : ". El proceso automático de actualización puede estar caído.")
+    + " Ver «Actualización automática» y «Traspaso» en el README del proyecto.";
+  caja.hidden = false;
+})();
+
 var navMenus = document.querySelectorAll(".nav-menu");
 document.querySelectorAll(".nav-vistas .tab").forEach(function (b) {
   b.addEventListener("click", function () {
