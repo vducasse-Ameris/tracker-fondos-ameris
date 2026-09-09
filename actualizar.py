@@ -23,6 +23,7 @@ def actualizar(recarga_completa: bool = False) -> None:
     hoy = dt.date.today()
 
     cliente_bolsa = bolsa.ClienteBolsa()
+    fallos_cmf: list[str] = []
 
     for fondo_id, ficha in fondos.items():
         print(f"\n=== {ficha['nombre']} ===")
@@ -35,10 +36,21 @@ def actualizar(recarga_completa: bool = False) -> None:
                 # re-consulta unos días hacia atrás por si CMF corrige valores
                 inicio = dt.date.fromisoformat(ultima) - dt.timedelta(days=7)
         print(f"  CMF: consultando desde {inicio} hasta {hoy}...")
-        filas = cmf.obtener_valores_cuota(ficha["cmf"]["rut"],
-                                          ficha["cmf"]["tipoentidad"], inicio, hoy)
-        n = db.guardar_valores_cuota(con, fondo_id, filas)
-        print(f"  CMF: {len(filas)} filas obtenidas, {n} guardadas/actualizadas")
+        try:
+            filas = cmf.obtener_valores_cuota(ficha["cmf"]["rut"],
+                                              ficha["cmf"]["tipoentidad"], inicio, hoy)
+        except Exception as e:
+            # era la única fuente sin proteger: un timeout de CMF en UN fondo
+            # botaba la corrida entera — sin reporte ni publicación, y el
+            # dashboard se quedaba con lo del día anterior hasta el siguiente
+            # cron (pasó el 09-sep-2026). Se conserva lo ya guardado y se sigue
+            # con los demás fondos; como cada corrida re-consulta los últimos 7
+            # días, el fondo se pone al día solo en la próxima.
+            print(f"  CMF: ERROR ({type(e).__name__}) — se conserva lo previo")
+            fallos_cmf.append(ficha["nombre_corto"])
+        else:
+            n = db.guardar_valores_cuota(con, fondo_id, filas)
+            print(f"  CMF: {len(filas)} filas obtenidas, {n} guardadas/actualizadas")
 
         # 2) dividendos Bolsa por serie (una serie puede tener más de un nemo
         #    si la Bolsa renombró el instrumento)
@@ -126,6 +138,11 @@ def actualizar(recarga_completa: bool = False) -> None:
             print(f"  {ficha['nombre_corto']:<24} SIN DATOS  <<< ATRASADO")
     if atrasados:
         print(f"  ATENCIÓN: {len(atrasados)} fondo(s) atrasado(s): {', '.join(atrasados)}")
+    if fallos_cmf:
+        # el fondo queda con sus datos previos: sin esta línea el salto pasaría
+        # inadvertido hasta que el control de frescura lo marque días después
+        print(f"  ATENCIÓN: CMF falló en {len(fallos_cmf)} fondo(s) esta corrida "
+              f"({', '.join(fallos_cmf)}) — se reintenta en la próxima")
 
     # 5) reporte HTML
     import reporte
