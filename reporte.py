@@ -474,6 +474,9 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
                    else f"{verifs[0]} … {verifs[-1]}") if verifs else "s/f"
 
     # --- tabla cuantitativa (serie comparativa, ventanas rolling + riesgo 12M) ---
+    fin_mes_prev = dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1)
+    etiqueta_mes = f"{_MESES[fin_mes_prev.month - 1]}-{fin_mes_prev.year % 100:02d}"
+    atrasados: list[str] = []  # fondos sin cierre publicado del mes de la columna
     filas_cuant = []
     for corto, df in dfs.items():
         o = origenes.get(corto, {})
@@ -495,20 +498,38 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
         mdd = (ind12 / ind12.cummax() - 1).min() if len(ind12) >= (6 if es_mensual else 31) else None
         marca = '<sup>*</sup>' if es_mensual else ""
         aum_fondo = aums.get(corto)  # patrimonio total del fondo (todas las series)
+
+        # La columna lleva el nombre de un mes concreto, así que se calcula PARA
+        # ESE mes en cada fondo. Antes se usaba `mes_anterior` del resumen, que
+        # se referencia al último dato DEL FONDO: un fondo de valorización
+        # mensual con rezago (ADI 6 publica ~4 semanas después del cierre)
+        # terminaba mostrando su mes anterior bajo el rótulo del mes de la
+        # columna — ADI 6 exhibía su junio en la columna «ago-26», junto a los
+        # agostos reales del resto. Sin cierre publicado de ese mes va vacía:
+        # no se calcula ni se sustituye nada.
+        ind = df["indice"]
+        m_ant = (fin_mes_prev.year, fin_mes_prev.month - 1) if fin_mes_prev.month > 1 \
+            else (fin_mes_prev.year - 1, 12)
+        i1 = _fin_mes_valor(ind, fin_mes_prev.year, fin_mes_prev.month)
+        i0 = _fin_mes_valor(ind, *m_ant)
+        mes_col = i1 / i0 - 1 if (i0 is not None and i1 is not None) else None
+        if mes_col is None:
+            atrasados.append(corto)
+        aviso = ('<sup title="Sin cierre publicado de este mes: el fondo va '
+                 'rezagado respecto del resto de la tabla">‡</sup>'
+                 if mes_col is None else "")
+
         filas_cuant.append(
             "<tr>"
-            f'<td><span class="swatch s{idx}"></span>{corto}</td>'
+            f'<td><span class="swatch s{idx}"></span>{corto}{aviso}</td>'
             f'<td>{etiquetas_serie[corto]}</td>'
             f'<td class="num">{"$ " + _num(aum_fondo.iloc[-1] / 1e6, 0) + " MM" if aum_fondo is not None and len(aum_fondo) else "–"}</td>'
-            + _celda_pct(r.get("mes_anterior")) + _celda_pct(r["mtd"])
+            + _celda_pct(mes_col) + _celda_pct(r["mtd"])
             + _celda_pct(r["ytd"]) + _celda_pct(r["12m"])
             + f'<td class="num">{_pct(vol)}{marca}</td>'
             + f'<td class="num">{_pct(mdd)}{marca}</td>'
             "</tr>")
     hay_mensual = any(mensual.values())
-
-    fin_mes_prev = dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1)
-    etiqueta_mes = f"{_MESES[fin_mes_prev.month - 1]}-{fin_mes_prev.year % 100:02d}"
 
     # --- matriz de rentabilidad mensual (mes vigente a la izquierda → hacia atrás) ---
     meses: list[tuple[int, int]] = []
@@ -577,6 +598,19 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     # notas para categorías con fondos de valorización mensual (deuda inmobiliaria):
     # su vol/MDD salen artificialmente bajos porque el valor cuota es a tasación
     # mensual, no a mercado diario → no comparables con los fondos diarios.
+    # aviso de fondos sin el cierre del mes de la columna: sus celdas de ese mes
+    # y de MTD van vacías, y sus ventanas (YTD/12M) están medidas a un corte
+    # anterior al del resto de la tabla
+    nota_atrasados = (
+        '<p class="muted mini"><strong>‡</strong> '
+        f'<strong>{", ".join(atrasados)}</strong> aún no '
+        f'{"publican" if len(atrasados) > 1 else "publica"} el cierre de '
+        f'{etiqueta_mes} en CMF (valorización mensual, se informa con semanas de '
+        'rezago). Las celdas de ese mes y de MTD van <strong>vacías</strong>: no se '
+        'estima ni se sustituye por otro mes. Ojo: sus columnas YTD y 12M están '
+        'medidas al último cierre que sí publicó, anterior al del resto de la '
+        'tabla.</p>' if atrasados else "")
+
     # la matriz siempre va en mes calendario: es la única convención comparable
     # entre gestoras. Se avisa de los que publican distinto para que nadie lea
     # una diferencia de convención como una diferencia de rentabilidad.
@@ -618,13 +652,14 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
      Editable en fondos.json → "ficha".</p>
 
   <h3>Rentabilidad y riesgo <span class="muted mini">(serie comparativa; 3M/YTD/12M a fin
-     de mes cerrado — convención factsheet; MTD al último dato)</span></h3>
+     de mes cerrado — convención factsheet; MTD del mes en curso, vacío si el fondo aún no publica ese mes)</span></h3>
   <div class="tabla-scroll"><table>
     <thead><tr><th>Fondo</th><th>Serie</th><th>AUM fondo</th><th>{etiqueta_mes}</th>
     <th>MTD</th><th>YTD</th><th>12M</th><th>Vol 12M (a)</th><th>MDD 12M</th></tr></thead>
     <tbody>{''.join(filas_cuant)}</tbody>
   </table></div>
   {nota_riesgo}
+  {nota_atrasados}
 {seccion_mayor}
   <h3>Rentabilidad mensual comparativa <span class="muted mini">(meses calendario;
      el mes en curso es parcial)</span></h3>
@@ -828,7 +863,7 @@ def _seccion_fondo(con: sqlite3.Connection, fondo_id: str, ficha: dict) -> str:
      Fuentes: CMF (valores cuota) y Bolsa de Santiago / nuam (dividendos) · CLP nominal</p>
 
   <h3>Rentabilidades por serie <span class="muted mini">(ajustadas por dividendos ·
-     3M/YTD/12M a fin de mes cerrado, convención factsheet; MTD y diaria al último dato)</span></h3>
+     3M/YTD/12M a fin de mes cerrado, convención factsheet; diaria al último dato; MTD del mes en curso, vacío si el fondo aún no publica ese mes)</span></h3>
   <div class="tabla-scroll"><table>
     <thead><tr><th>Serie</th><th>Nemo</th><th>Valor cuota</th>{col_ult}
     <th title="Mes calendario anterior — comparable con el factsheet mensual">{etiqueta_mes}</th>

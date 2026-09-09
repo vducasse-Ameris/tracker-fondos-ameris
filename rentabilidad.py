@@ -234,8 +234,23 @@ def resumen_cierre_mensual(df: pd.DataFrame, anio_inicio: int | None = None) -> 
     }
 
 
+def _mtd(indice: pd.Series, ultimo: dt.date, hoy: dt.date) -> float | None:
+    """Acumulado del mes en curso, o None si el fondo no tiene dato de ese mes.
+
+    «MTD» significa el mes corriente. Si el último cierre publicado es de un mes
+    anterior —fondos de valorización mensual con rezago, como ADI 6, que publica
+    ~4 semanas después del cierre— no hay mes en curso que acumular: la celda va
+    vacía en vez de mostrar el mes viejo completo bajo el rótulo MTD (ADI 6
+    mostraba su julio íntegro como «MTD» estando ya en septiembre).
+    """
+    if (ultimo.year, ultimo.month) != (hoy.year, hoy.month):
+        return None
+    return _rent(indice, dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1))
+
+
 def resumen_rentabilidades(df: pd.DataFrame, anio_inicio: int | None = None,
-                           fecha_origen: str | None = None) -> dict:
+                           fecha_origen: str | None = None,
+                           hoy: dt.date | None = None) -> dict:
     """Rentabilidades estándar (nominal CLP).
 
     Las ventanas 1M/3M/YTD/12M usan **cortes de mes calendario** al último mes
@@ -263,7 +278,7 @@ def resumen_rentabilidades(df: pd.DataFrame, anio_inicio: int | None = None,
         "valor_cuota": df["valor_cuota"].iloc[-1],
         "diaria": df["retorno_diario"].iloc[-1],
         "1m": _rent_entre(indice, base_meses(1), corte),
-        "mtd": _rent(indice, dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1)),
+        "mtd": _mtd(indice, ultimo, hoy or dt.date.today()),
         "mes_anterior": _rent_entre(indice, fin_mes_ante, fin_mes_prev),
         "mes_anterior_fecha": fin_mes_prev.isoformat(),
         "3m": _rent_entre(indice, base_meses(3), corte),

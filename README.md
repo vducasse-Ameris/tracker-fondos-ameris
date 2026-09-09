@@ -190,6 +190,25 @@ la publicación se omite sin afectar el resto de la corrida.
   serie P (+4,6 pb en jun-2025, +24 pb en may-2026) hasta corregirse el
   23-jul-2026. Señal de alerta: moneda del dividendo ≠ moneda del fondo, o
   valor cuota de otro orden de magnitud.
+- **Mes sin publicar: se deja vacío, no se estima.** Regla del dashboard: si CMF
+  no ha publicado el cierre de un mes para un fondo, ese mes va **vacío**; no se
+  extrapola, no se anualiza y no se sustituye por otro mes. Dos correcciones de
+  sep-2026 que violaban esto:
+  - La columna de mes de la tabla «Rentabilidad y riesgo» usaba el campo
+    `mes_anterior` del resumen, que se referencia al **último dato del fondo**,
+    no al mes que rotula la columna. ADI 6 (valorización mensual, publica ~4
+    semanas después del cierre) mostraba su **junio** bajo el rótulo «ago-26»,
+    al lado de los agostos reales del resto. Ahora la columna se calcula para el
+    mes que nombra y va vacía si ese fondo no lo tiene.
+  - **MTD** significa mes en curso. Si el último cierre es de un mes anterior no
+    hay nada que acumular: la celda va vacía. ADI 6 mostraba su julio íntegro
+    como «MTD» estando ya en septiembre. Efecto lateral aceptado: los primeros
+    días de cada mes, mientras CMF no publica el día 1, el MTD de todos los
+    fondos sale vacío — es correcto, no hay dato del mes.
+
+  Los fondos sin el cierre del mes se marcan con **‡** y una nota al pie. Ojo con
+  sus columnas YTD y 12M: siguen siendo cifras válidas, pero medidas a **su**
+  último cierre, anterior al del resto de la tabla.
 - **Certificación mensual:** el reporte incluye por fondo una tabla «Corte fin
   de mes» (Mes/3M/YTD/12M/24M/36M, meses calendario al último cierre mensual)
   para cotejar 1:1 contra los factsheets. Ojo: el resto del reporte usa
