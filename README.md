@@ -206,9 +206,10 @@ la publicación se omite sin afectar el resto de la corrida.
     días de cada mes, mientras CMF no publica el día 1, el MTD de todos los
     fondos sale vacío — es correcto, no hay dato del mes.
 
-  Los fondos sin el cierre del mes se marcan con **‡** y una nota al pie. Ojo con
-  sus columnas YTD y 12M: siguen siendo cifras válidas, pero medidas a **su**
-  último cierre, anterior al del resto de la tabla.
+  La celda vacía va **sin marcador ni nota al pie**: no reportar es suficiente,
+  y un disclaimer por fondo ensucia la tabla. Al auditar, tener presente que las
+  columnas YTD y 12M de un fondo rezagado siguen siendo cifras válidas pero
+  medidas a **su** último cierre, anterior al del resto de la tabla.
 - **Certificación mensual:** el reporte incluye por fondo una tabla «Corte fin
   de mes» (Mes/3M/YTD/12M/24M/36M, meses calendario al último cierre mensual)
   para cotejar 1:1 contra los factsheets. Ojo: el resto del reporte usa

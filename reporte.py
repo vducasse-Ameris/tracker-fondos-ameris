@@ -476,7 +476,6 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     # --- tabla cuantitativa (serie comparativa, ventanas rolling + riesgo 12M) ---
     fin_mes_prev = dt.date(ultimo.year, ultimo.month, 1) - dt.timedelta(days=1)
     etiqueta_mes = f"{_MESES[fin_mes_prev.month - 1]}-{fin_mes_prev.year % 100:02d}"
-    atrasados: list[str] = []  # fondos sin cierre publicado del mes de la columna
     filas_cuant = []
     for corto, df in dfs.items():
         o = origenes.get(corto, {})
@@ -506,22 +505,18 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
         # terminaba mostrando su mes anterior bajo el rótulo del mes de la
         # columna — ADI 6 exhibía su junio en la columna «ago-26», junto a los
         # agostos reales del resto. Sin cierre publicado de ese mes va vacía:
-        # no se calcula ni se sustituye nada.
+        # no se calcula ni se sustituye nada, y tampoco se rotula — la celda
+        # vacía basta.
         ind = df["indice"]
         m_ant = (fin_mes_prev.year, fin_mes_prev.month - 1) if fin_mes_prev.month > 1 \
             else (fin_mes_prev.year - 1, 12)
         i1 = _fin_mes_valor(ind, fin_mes_prev.year, fin_mes_prev.month)
         i0 = _fin_mes_valor(ind, *m_ant)
         mes_col = i1 / i0 - 1 if (i0 is not None and i1 is not None) else None
-        if mes_col is None:
-            atrasados.append(corto)
-        aviso = ('<sup title="Sin cierre publicado de este mes: el fondo va '
-                 'rezagado respecto del resto de la tabla">‡</sup>'
-                 if mes_col is None else "")
 
         filas_cuant.append(
             "<tr>"
-            f'<td><span class="swatch s{idx}"></span>{corto}{aviso}</td>'
+            f'<td><span class="swatch s{idx}"></span>{corto}</td>'
             f'<td>{etiquetas_serie[corto]}</td>'
             f'<td class="num">{"$ " + _num(aum_fondo.iloc[-1] / 1e6, 0) + " MM" if aum_fondo is not None and len(aum_fondo) else "–"}</td>'
             + _celda_pct(mes_col) + _celda_pct(r["mtd"])
@@ -598,19 +593,6 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     # notas para categorías con fondos de valorización mensual (deuda inmobiliaria):
     # su vol/MDD salen artificialmente bajos porque el valor cuota es a tasación
     # mensual, no a mercado diario → no comparables con los fondos diarios.
-    # aviso de fondos sin el cierre del mes de la columna: sus celdas de ese mes
-    # y de MTD van vacías, y sus ventanas (YTD/12M) están medidas a un corte
-    # anterior al del resto de la tabla
-    nota_atrasados = (
-        '<p class="muted mini"><strong>‡</strong> '
-        f'<strong>{", ".join(atrasados)}</strong> aún no '
-        f'{"publican" if len(atrasados) > 1 else "publica"} el cierre de '
-        f'{etiqueta_mes} en CMF (valorización mensual, se informa con semanas de '
-        'rezago). Las celdas de ese mes y de MTD van <strong>vacías</strong>: no se '
-        'estima ni se sustituye por otro mes. Ojo: sus columnas YTD y 12M están '
-        'medidas al último cierre que sí publicó, anterior al del resto de la '
-        'tabla.</p>' if atrasados else "")
-
     # la matriz siempre va en mes calendario: es la única convención comparable
     # entre gestoras. Se avisa de los que publican distinto para que nadie lea
     # una diferencia de convención como una diferencia de rentabilidad.
@@ -659,7 +641,6 @@ def _seccion_comparativo(con: sqlite3.Connection, fondos: dict,
     <tbody>{''.join(filas_cuant)}</tbody>
   </table></div>
   {nota_riesgo}
-  {nota_atrasados}
 {seccion_mayor}
   <h3>Rentabilidad mensual comparativa <span class="muted mini">(meses calendario;
      el mes en curso es parcial)</span></h3>
